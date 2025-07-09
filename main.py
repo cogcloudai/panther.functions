@@ -26,27 +26,60 @@ if name:
     st.markdown("## 🧠 Ask Dr. X: What is your interpretation of a function?")
     st.write("Dr. X wants to hear how YOU understand the concept of a function.")
 
-    user_thought = st.text_area(
-        "What do YOU think a function is?",
-        on_change=mark_ask_drx,
-        key="function_input"
-    )
+    # --- Embed External HTML Chat Widget ---
+    st.components.v1.html('''
+        <!-- Ask Dr. X Widget - Embedded -->
+        <div id="ask-drx-widget" style="max-width: 600px; margin: 2rem auto; padding: 1.5rem; background: white; border: 2px solid #ddd; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-family: Arial, sans-serif;">
+          <h3 style="text-align: center; color: #333; margin-bottom: 1rem; font-size: 1.5rem;">
+            Ask Dr. X <span style="font-size: 2.2rem;">👓</span>
+          </h3>
+          <div id="drx-chat-box" style="border: 1px solid #ccc; border-radius: 8px; padding: 1rem; height: 300px; overflow-y: auto; background: #fafafa; margin-bottom: 1rem;">
+            <div style="color: #333; font-weight: bold; margin-bottom: 0.5rem;">Dr. X: Hello! I'm your AI tutor. What would you like to learn today?</div>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <input 
+              id="drx-user-input" 
+              type="text" 
+              placeholder="Ask me anything..." 
+              style="flex: 1; padding: 0.75rem; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;"
+              onkeypress="if(event.key==='Enter') sendToDrX()"
+            />
+            <button 
+              onclick="sendToDrX()" 
+              style="padding: 0.75rem 1.5rem; background: #333; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;"
+            >
+              Send
+            </button>
+          </div>
+        </div>
 
-    if st.session_state.get("ask_drx") and user_thought:
-        with st.spinner("Dr. X is thinking..."):
-            try:
-                client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-                response = client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=[
-                        {"role": "system", "content": "You are Dr. X, a helpful AI teacher."},
-                        {"role": "user", "content": f"The student says: '{user_thought}'. Help clarify or support their idea of a function."}
-                    ]
-                )
-                st.markdown("### 🧠 Dr. X says:")
-                st.write(response.choices[0].message.content)
-            except Exception as e:
-                st.error(f"LLM Error: {e}")
+        <script>
+        async function sendToDrX() {
+          const input = document.getElementById('drx-user-input');
+          const message = input.value.trim();
+          if (!message) return;
+          const chatBox = document.getElementById('drx-chat-box');
+          chatBox.innerHTML += `<div style="color: #007bff; font-weight: bold; margin-bottom: 0.5rem;">You: ${message}</div>`;
+          input.value = "";
+          chatBox.innerHTML += `<div id="thinking" style="color: #666; font-style: italic; margin-bottom: 0.5rem;">Dr. X is thinking...</div>`;
+          chatBox.scrollTop = chatBox.scrollHeight;
+          try {
+            const response = await fetch('https://ask-drx-730124987572.us-central1.run.app', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message }),
+            });
+            const data = await response.json();
+            document.getElementById('thinking').remove();
+            chatBox.innerHTML += `<div style="color: #333; font-weight: bold; margin-bottom: 0.5rem;">Dr. X: ${data.reply}</div>`;
+          } catch (error) {
+            document.getElementById('thinking').remove();
+            chatBox.innerHTML += `<div style="color: #333; font-weight: bold; margin-bottom: 0.5rem;">Dr. X: Sorry, I'm having trouble connecting right now. Please try again.</div>`;
+          }
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        </script>
+    ''', height=500)
 
     # --- Tutorial ---
     st.markdown("---")
@@ -82,7 +115,7 @@ if name:
     # --- Exponential Decay Focus ---
     st.markdown("---")
     st.header("📉 Dive Deeper: Exponential Decay")
-    st.latex(r"f(x) = 100 \cdot (0.9)^x")
+    st.latex(r"f(x) = 100 \\cdot (0.9)^x")
 
     st.write("- 100 = Starting value")
     st.write("- 0.9 = Decay factor (10% decrease)")
@@ -102,6 +135,7 @@ if name:
     if st.session_state.get("get_drx_reflection") and reflection:
         with st.spinner("Dr. X is thinking..."):
             try:
+                client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
                 response2 = client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
