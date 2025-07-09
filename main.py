@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 
 # --- Page Config ---
 st.set_page_config(page_title="Panther Functions: Exponential Decay", page_icon="📉")
@@ -24,8 +24,8 @@ if name:
     if st.button("🔍 Ask Dr. X") and user_thought:
         with st.spinner("Dr. X is thinking..."):
             try:
-                openai.api_key = st.secrets["OPENAI_API_KEY"]
-                response = openai.ChatCompletion.create(
+                client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+                response = client.chat.completions.create(
                     model="gpt-4",
                     messages=[
                         {"role": "system", "content": "You are Dr. X, a helpful AI teacher."},
@@ -33,7 +33,7 @@ if name:
                     ]
                 )
                 st.markdown("### 🤖 Dr. X says:")
-                st.write(response['choices'][0]['message']['content'])
+                st.write(response.choices[0].message.content)
             except Exception as e:
                 st.error(f"LLM Error: {e}")
 
@@ -87,7 +87,7 @@ if name:
     if st.button("📩 Get Dr. X's Thoughts") and reflection:
         with st.spinner("Dr. X is thinking..."):
             try:
-                response2 = openai.ChatCompletion.create(
+                response2 = client.chat.completions.create(
                     model="gpt-4",
                     messages=[
                         {"role": "system", "content": "You're Dr. X, a mentor for students learning functions."},
@@ -95,7 +95,7 @@ if name:
                     ]
                 )
                 st.markdown("### 🤖 Dr. X replies:")
-                st.write(response2['choices'][0]['message']['content'])
+                st.write(response2.choices[0].message.content)
             except Exception as e:
                 st.error(f"LLM Error: {e}")
 
