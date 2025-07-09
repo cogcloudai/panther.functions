@@ -98,3 +98,7 @@ if name:
                 st.write(response2['choices'][0]['message']['content'])
             except Exception as e:
                 st.error(f"LLM Error: {e}")
+
+# --- Footer Attribution ---
+st.markdown("---")
+st.markdown("### 🧠 MathCraft Lesson: *Panther.Functions* — developed by Xavier Honablue, M.Ed")
