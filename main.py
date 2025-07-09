@@ -17,7 +17,7 @@ st.markdown("Welcome, Englewood STEM Panthers! Enter your name and choose an ava
 
 # --- Student Info ---
 name = st.text_input("Enter your name:")
-avatar = st.selectbox("Choose your multidimensional shape avatar:", ["🔺 Tetrahedron", "🛸 Dodecahedron", "🧊 Cube", "🌀 Torus"])
+avatar = st.selectbox("Choose your multidimensional shape avatar:", ["🔺 Tetrahedron", "🚘 Dodecahedron", "🪒 Cube", "🌀 Torus"])
 
 if name:
     st.success(f"Welcome, {name}! Let's begin exploring functions.")
@@ -37,13 +37,13 @@ if name:
             try:
                 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
                 response = client.chat.completions.create(
-                    model="gpt-4o",
+                    model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": "You are Dr. X, a helpful AI teacher."},
                         {"role": "user", "content": f"The student says: '{user_thought}'. Help clarify or support their idea of a function."}
                     ]
                 )
-                st.markdown("### 🤖 Dr. X says:")
+                st.markdown("### 🧠 Dr. X says:")
                 st.write(response.choices[0].message.content)
             except Exception as e:
                 st.error(f"LLM Error: {e}")
@@ -103,13 +103,13 @@ if name:
         with st.spinner("Dr. X is thinking..."):
             try:
                 response2 = client.chat.completions.create(
-                    model="gpt-4o",
+                    model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": "You're Dr. X, a mentor for students learning functions."},
                         {"role": "user", "content": reflection}
                     ]
                 )
-                st.markdown("### 🤖 Dr. X replies:")
+                st.markdown("### 🧠 Dr. X replies:")
                 st.write(response2.choices[0].message.content)
             except Exception as e:
                 st.error(f"LLM Error: {e}")
