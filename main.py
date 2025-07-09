@@ -19,14 +19,14 @@ if name:
     st.markdown("## 🧠 Ask Dr. X: What is your interpretation of a function?")
     st.write("Dr. X wants to hear how YOU understand the concept of a function.")
 
-    user_thought = st.text_area("What do YOU think a function is?")
+    user_thought = st.text_area("What do YOU think a function is?", on_change=lambda: st.session_state.ask_drx := True, key="function_input")
 
-    if st.button("🔍 Ask Dr. X") and user_thought:
+    if st.session_state.get("ask_drx") and user_thought:
         with st.spinner("Dr. X is thinking..."):
             try:
                 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
                 response = client.chat.completions.create(
-                    model="gpt-4",
+                    model="gpt-4o",
                     messages=[
                         {"role": "system", "content": "You are Dr. X, a helpful AI teacher."},
                         {"role": "user", "content": f"The student says: '{user_thought}'. Help clarify or support their idea of a function."}
@@ -82,13 +82,13 @@ if name:
     # --- Reflection Prompt ---
     st.markdown("---")
     st.header("🎓 Reflection with Dr. X")
-    reflection = st.text_area("How does decay differ from linear change? What's something in real life that decays?")
+    reflection = st.text_area("How does decay differ from linear change? What's something in real life that decays?", on_change=lambda: st.session_state.get_drx_reflection := True, key="reflection_input")
 
-    if st.button("📩 Get Dr. X's Thoughts") and reflection:
+    if st.session_state.get("get_drx_reflection") and reflection:
         with st.spinner("Dr. X is thinking..."):
             try:
                 response2 = client.chat.completions.create(
-                    model="gpt-4",
+                    model="gpt-4o",
                     messages=[
                         {"role": "system", "content": "You're Dr. X, a mentor for students learning functions."},
                         {"role": "user", "content": reflection}
