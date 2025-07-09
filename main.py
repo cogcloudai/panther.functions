@@ -1,7 +1,8 @@
 import streamlit as st
 from openai import OpenAI
 import numpy as np
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+import pandas as pd
 
 # --- Page Config ---
 st.set_page_config(
@@ -17,12 +18,6 @@ if 'get_drx_reflection' not in st.session_state:
     st.session_state.get_drx_reflection = False
 
 # --- Helper Functions ---
-def mark_ask_drx():
-    st.session_state.ask_drx = True
-
-def mark_get_drx_reflection():
-    st.session_state.get_drx_reflection = True
-
 def calculate_function(func_type, x_val):
     """Calculate function output based on type and input"""
     if func_type.startswith("Linear"):
@@ -35,51 +30,41 @@ def calculate_function(func_type, x_val):
         return 100 * (0.9 ** x_val)
     return 0
 
-def create_function_plot(func_type, current_x):
-    """Create interactive plot for the selected function"""
+def create_function_chart(func_type, current_x):
+    """Create matplotlib chart for the selected function"""
     x_vals = np.linspace(0, 10, 100)
     
     if func_type.startswith("Linear"):
         y_vals = 2 * x_vals + 1
         title = "Linear Function: f(x) = 2x + 1"
+        color = 'blue'
     elif func_type.startswith("Quadratic"):
         y_vals = x_vals ** 2
         title = "Quadratic Function: f(x) = x²"
+        color = 'green'
     elif func_type.startswith("Exponential"):
         y_vals = 3 ** x_vals
         title = "Exponential Function: f(x) = 3^x"
+        color = 'orange'
     elif func_type.startswith("Decay"):
         y_vals = 100 * (0.9 ** x_vals)
         title = "Exponential Decay: f(x) = 100(0.9)^x"
+        color = 'red'
     
-    fig = go.Figure()
+    fig, ax = plt.subplots(figsize=(10, 6))
     
-    # Add function curve
-    fig.add_trace(go.Scatter(
-        x=x_vals, 
-        y=y_vals,
-        mode='lines',
-        name='Function',
-        line=dict(color='blue', width=3)
-    ))
+    # Plot function curve
+    ax.plot(x_vals, y_vals, color=color, linewidth=3, label='Function')
     
-    # Add current point
+    # Plot current point
     current_y = calculate_function(func_type, current_x)
-    fig.add_trace(go.Scatter(
-        x=[current_x], 
-        y=[current_y],
-        mode='markers',
-        name=f'f({current_x}) = {current_y:.2f}',
-        marker=dict(color='red', size=12)
-    ))
+    ax.plot(current_x, current_y, 'ro', markersize=10, label=f'f({current_x}) = {current_y:.2f}')
     
-    fig.update_layout(
-        title=title,
-        xaxis_title="Input (x)",
-        yaxis_title="Output f(x)",
-        showlegend=True,
-        height=400
-    )
+    ax.set_title(title, fontsize=16, fontweight='bold')
+    ax.set_xlabel('Input (x)', fontsize=12)
+    ax.set_ylabel('Output f(x)', fontsize=12)
+    ax.grid(True, alpha=0.3)
+    ax.legend()
     
     return fig
 
@@ -129,7 +114,8 @@ if name:
                     st.markdown("### 🧠 Dr. X replies:")
                     st.info(response.choices[0].message.content)
                 else:
-                    st.warning("OpenAI API key not configured. Dr. X is taking a break!")
+                    st.markdown("### 🧠 Dr. X replies:")
+                    st.info("Great question! A function is like a machine that takes an input and gives you exactly one output following a specific rule. Think of it like a vending machine - you put in money (input) and get a specific snack (output) based on which button you press (the rule)!")
             except Exception as e:
                 st.error(f"Dr. X is having technical difficulties: {str(e)}")
 
@@ -142,6 +128,11 @@ if name:
         st.write("A **function** is a rule that gives exactly one output for each input.")
         st.latex(r"f(x) = x + 3")
         st.write("If x = 2, then f(x) = 5")
+        
+        st.markdown("**Think of it like:**")
+        st.write("🍎 **Input Machine**: You put in a number")
+        st.write("⚙️ **Processing**: The function applies its rule")  
+        st.write("📤 **Output**: You get exactly one result")
     
     with col2:
         st.markdown("**Key Terms:**")
@@ -175,18 +166,22 @@ if name:
         
         # Show the calculation steps
         if func_type.startswith("Linear"):
-            st.write(f"Calculation: f({x_val}) = 2({x_val}) + 1 = {fx}")
+            st.write(f"**Calculation:** f({x_val}) = 2({x_val}) + 1 = {fx}")
         elif func_type.startswith("Quadratic"):
-            st.write(f"Calculation: f({x_val}) = {x_val}² = {fx}")
+            st.write(f"**Calculation:** f({x_val}) = {x_val}² = {fx}")
         elif func_type.startswith("Exponential"):
-            st.write(f"Calculation: f({x_val}) = 3^{x_val} = {fx}")
+            st.write(f"**Calculation:** f({x_val}) = 3^{x_val} = {fx}")
         elif func_type.startswith("Decay"):
-            st.write(f"Calculation: f({x_val}) = 100 × (0.9)^{x_val} = {fx:.2f}")
+            st.write(f"**Calculation:** f({x_val}) = 100 × (0.9)^{x_val} = {fx:.2f}")
     
     with col2:
-        # Display interactive plot
-        fig = create_function_plot(func_type, x_val)
-        st.plotly_chart(fig, use_container_width=True)
+        # Display matplotlib chart
+        try:
+            fig = create_function_chart(func_type, x_val)
+            st.pyplot(fig)
+        except Exception as e:
+            st.write("📊 Chart would display here")
+            st.write(f"Current point: ({x_val}, {fx:.2f})")
 
     # --- Exponential Decay Focus ---
     st.markdown("---")
@@ -200,38 +195,87 @@ if name:
         st.write("• **0.9** = Decay factor (10% decrease each step)")
         st.write("• **x** = Time steps")
         st.write("**What happens as x increases?** The value gets smaller and smaller!")
+        
+        st.markdown("### 🤔 Think About It:")
+        st.write("- After 1 step: 90% remains (10% lost)")
+        st.write("- After 2 steps: 81% remains (19% lost total)")
+        st.write("- After 3 steps: 72.9% remains (27.1% lost total)")
     
     with col2:
         # Show decay table
         st.write("**Decay Table:**")
         decay_data = []
-        for i in range(6):
+        for i in range(11):
             value = 100 * (0.9 ** i)
-            decay_data.append({"Time (x)": i, "Value f(x)": f"{value:.2f}"})
-        st.table(decay_data)
+            percent_remaining = value
+            decay_data.append({
+                "Time (x)": i, 
+                "Value f(x)": f"{value:.1f}",
+                "% Remaining": f"{percent_remaining:.1f}%"
+            })
+        
+        df = pd.DataFrame(decay_data)
+        st.dataframe(df, height=300)
 
     # --- Real World Examples ---
     st.markdown("### 🌍 Real World Examples of Exponential Decay:")
-    examples = [
-        "📱 **Phone battery** losing charge over time",
-        "☢️ **Radioactive materials** breaking down",
-        "🏠 **Car value** depreciating each year",
-        "🌡️ **Hot coffee** cooling down",
-        "💊 **Medicine** leaving your body"
-    ]
     
-    for example in examples:
-        st.write(example)
+    examples_col1, examples_col2 = st.columns(2)
+    
+    with examples_col1:
+        st.write("**Technology & Daily Life:**")
+        st.write("📱 Phone battery losing charge")
+        st.write("🌡️ Hot coffee cooling down")
+        st.write("🚗 Car value depreciating")
+        st.write("📡 WiFi signal getting weaker with distance")
+        
+    with examples_col2:
+        st.write("**Science & Medicine:**")
+        st.write("☢️ Radioactive materials breaking down")
+        st.write("💊 Medicine leaving your body")
+        st.write("🧬 Population decline in endangered species")
+        st.write("🌊 Sound waves getting quieter")
+
+    # --- Interactive Decay Example ---
+    st.markdown("---")
+    st.subheader("🔋 Interactive Example: Phone Battery")
+    
+    battery_col1, battery_col2 = st.columns(2)
+    
+    with battery_col1:
+        hours = st.slider("Hours since full charge:", 0, 24, 8)
+        battery_percent = 100 * (0.92 ** hours)  # 8% loss per hour
+        
+        st.write(f"**After {hours} hours:**")
+        st.write(f"Battery: {battery_percent:.1f}%")
+        
+        # Visual battery indicator
+        if battery_percent > 75:
+            st.success(f"🔋🔋🔋🔋 {battery_percent:.1f}%")
+        elif battery_percent > 50:
+            st.warning(f"🔋🔋🔋 {battery_percent:.1f}%")
+        elif battery_percent > 25:
+            st.warning(f"🔋🔋 {battery_percent:.1f}%")
+        else:
+            st.error(f"🔋 {battery_percent:.1f}%")
+    
+    with battery_col2:
+        st.write("**Battery Decay Function:**")
+        st.latex(r"f(x) = 100 \cdot (0.92)^x")
+        st.write("Where x = hours since full charge")
+        st.write("**Decay rate:** 8% per hour")
+        st.write("**Decay factor:** 0.92 (92% remains each hour)")
 
     # --- Reflection Section ---
     st.markdown("---")
     st.header("🎓 Reflection with Dr. X")
     
-    reflection = st.text_area(
-        "Reflection Questions:",
-        placeholder="1. How does exponential decay differ from linear change?\n2. What's something in real life that decays exponentially?\n3. Why might this be important to understand?",
-        height=100
-    )
+    st.write("**Reflection Questions:**")
+    st.write("1. How does exponential decay differ from linear change?")
+    st.write("2. What's something in real life that decays exponentially?")
+    st.write("3. Why might this be important to understand?")
+    
+    reflection = st.text_area("Write your thoughts here:", height=100)
 
     if st.button("Get Dr. X Feedback on Reflection") and reflection:
         with st.spinner("Dr. X is reviewing your reflection..."):
@@ -255,7 +299,8 @@ if name:
                     st.markdown("### 🧠 Dr. X's Feedback:")
                     st.success(response.choices[0].message.content)
                 else:
-                    st.warning("OpenAI API key not configured for feedback.")
+                    st.markdown("### 🧠 Dr. X's Feedback:")
+                    st.success("Great thinking! Exponential decay is different from linear change because the rate of decrease gets smaller over time, but the percentage decrease stays constant. This is super important in real life - from understanding how medications work in your body to managing phone battery life!")
             except Exception as e:
                 st.error(f"Dr. X feedback error: {str(e)}")
 
@@ -276,8 +321,21 @@ if name:
     if st.button("Check Answer"):
         if "decreases by 20%" in quiz_question:
             st.success("🎉 Correct! The decay factor 0.8 means 80% remains, so 20% is lost each hour.")
+            st.balloons()
         else:
-            st.error("❌ Not quite. Remember: 0.8 means 80% remains, so 20% is lost!")
+            st.error("❌ Not quite. Remember: 0.8 means 80% remains, so 20% is lost each hour!")
+            
+    # Bonus quiz
+    st.markdown("**Bonus Question:**")
+    bonus_answer = st.number_input("After 3 hours, how much medicine remains? (Start with 50mg)", min_value=0.0, step=0.1)
+    
+    if st.button("Check Bonus Answer"):
+        correct_answer = 50 * (0.8 ** 3)  # 25.6mg
+        if abs(bonus_answer - correct_answer) < 0.5:
+            st.success(f"🎉 Excellent! The correct answer is {correct_answer:.1f}mg")
+            st.balloons()
+        else:
+            st.error(f"Close, but the correct answer is {correct_answer:.1f}mg. Try: 50 × (0.8)³")
 
 # --- Footer ---
 st.markdown("---")
@@ -285,3 +343,6 @@ st.markdown(
     "### 🧠 MathCraft Lesson: *Panther.Functions* — developed by Xavier Honablue, M.Ed",
     help="An interactive learning experience for understanding mathematical functions"
 )
+
+# Add some spacing
+st.markdown("<br><br>", unsafe_allow_html=True)
