@@ -1,348 +1,133 @@
 import streamlit as st
 from openai import OpenAI
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
 
 # --- Page Config ---
-st.set_page_config(
-    page_title="Panther Functions: Exponential Decay", 
-    page_icon="📉",
-    layout="wide"
-)
+st.set_page_config(page_title="Panther Functions: Exponential Decay", page_icon="📉")
 
-# --- Initialize Session State ---
-if 'ask_drx' not in st.session_state:
-    st.session_state.ask_drx = False
-if 'get_drx_reflection' not in st.session_state:
-    st.session_state.get_drx_reflection = False
+# --- Define State Flags ---
+def mark_ask_drx():
+    st.session_state.ask_drx = True
 
-# --- Helper Functions ---
-def calculate_function(func_type, x_val):
-    """Calculate function output based on type and input"""
-    if func_type.startswith("Linear"):
-        return 2 * x_val + 1
-    elif func_type.startswith("Quadratic"):
-        return x_val ** 2
-    elif func_type.startswith("Exponential"):
-        return 3 ** x_val
-    elif func_type.startswith("Decay"):
-        return 100 * (0.9 ** x_val)
-    return 0
+def mark_get_drx_reflection():
+    st.session_state.get_drx_reflection = True
 
-def create_function_chart(func_type, current_x):
-    """Create matplotlib chart for the selected function"""
-    x_vals = np.linspace(0, 10, 100)
-    
-    if func_type.startswith("Linear"):
-        y_vals = 2 * x_vals + 1
-        title = "Linear Function: f(x) = 2x + 1"
-        color = 'blue'
-    elif func_type.startswith("Quadratic"):
-        y_vals = x_vals ** 2
-        title = "Quadratic Function: f(x) = x²"
-        color = 'green'
-    elif func_type.startswith("Exponential"):
-        y_vals = 3 ** x_vals
-        title = "Exponential Function: f(x) = 3^x"
-        color = 'orange'
-    elif func_type.startswith("Decay"):
-        y_vals = 100 * (0.9 ** x_vals)
-        title = "Exponential Decay: f(x) = 100(0.9)^x"
-        color = 'red'
-    
-    fig, ax = plt.subplots(figsize=(10, 6))
-    
-    # Plot function curve
-    ax.plot(x_vals, y_vals, color=color, linewidth=3, label='Function')
-    
-    # Plot current point
-    current_y = calculate_function(func_type, current_x)
-    ax.plot(current_x, current_y, 'ro', markersize=10, label=f'f({current_x}) = {current_y:.2f}')
-    
-    ax.set_title(title, fontsize=16, fontweight='bold')
-    ax.set_xlabel('Input (x)', fontsize=12)
-    ax.set_ylabel('Output f(x)', fontsize=12)
-    ax.grid(True, alpha=0.3)
-    ax.legend()
-    
-    return fig
-
-# --- Main App ---
+# --- Title ---
 st.title("🐾 Panthers Learn Functions")
 st.markdown("Welcome, Englewood STEM Panthers! Enter your name and choose an avatar to begin.")
 
 # --- Student Info ---
-col1, col2 = st.columns(2)
-with col1:
-    name = st.text_input("Enter your name:")
-with col2:
-    avatar = st.selectbox(
-        "Choose your multidimensional shape avatar:", 
-        ["🔺 Tetrahedron", "🚘 Dodecahedron", "🪒 Cube", "🌀 Torus"]
-    )
+name = st.text_input("Enter your name:")
+avatar = st.selectbox("Choose your multidimensional shape avatar:", ["🔺 Tetrahedron", "🚘 Dodecahedron", "🪒 Cube", "🌀 Torus"])
 
 if name:
-    st.success(f"Welcome, {name} {avatar}! Let's begin exploring functions.")
+    st.success(f"Welcome, {name}! Let's begin exploring functions.")
 
-    # --- Ask Dr. X Section ---
+    # --- Ask Dr. X (LLM Initial Prompt) ---
     st.markdown("## 🧠 Ask Dr. X: What is your interpretation of a function?")
     st.write("Dr. X wants to hear how YOU understand the concept of a function.")
 
-    # Simplified chat interface
-    user_question = st.text_input("Ask Dr. X a question about functions:")
-    
-    if st.button("Ask Dr. X") and user_question:
-        with st.spinner("Dr. X is thinking..."):
-            try:
-                if 'OPENAI_API_KEY' in st.secrets:
-                    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-                    response = client.chat.completions.create(
-                        model="gpt-3.5-turbo",
-                        messages=[
-                            {
-                                "role": "system", 
-                                "content": "You're Dr. X, an enthusiastic AI tutor helping students understand mathematical functions. Keep responses concise, encouraging, and age-appropriate for high school students."
-                            },
-                            {
-                                "role": "user", 
-                                "content": f"Student question about functions: {user_question}"
-                            }
-                        ],
-                        max_tokens=200
-                    )
-                    st.markdown("### 🧠 Dr. X replies:")
-                    st.info(response.choices[0].message.content)
-                else:
-                    st.markdown("### 🧠 Dr. X replies:")
-                    st.info("Great question! A function is like a machine that takes an input and gives you exactly one output following a specific rule. Think of it like a vending machine - you put in money (input) and get a specific snack (output) based on which button you press (the rule)!")
-            except Exception as e:
-                st.error(f"Dr. X is having technical difficulties: {str(e)}")
+    # --- Embed External HTML Chat Widget ---
+    st.components.v1.html('''
+        <!-- Ask Dr. X Widget - Embedded -->
+        <div id="ask-drx-widget" style="max-width: 600px; margin: 2rem auto; padding: 1.5rem; background: white; border: 2px solid #ddd; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-family: Arial, sans-serif;">
+          <h3 style="text-align: center; color: #333; margin-bottom: 1rem; font-size: 1.5rem;">
+            Ask Dr. X <span style="font-size: 2.2rem;">👓</span>
+          </h3>
+          <div id="drx-chat-box" style="border: 1px solid #ccc; border-radius: 8px; padding: 1rem; height: 300px; overflow-y: auto; background: #fafafa; margin-bottom: 1rem;">
+            <div style="color: #333; font-weight: bold; margin-bottom: 0.5rem;">Dr. X: Hello! I'm your AI tutor. What would you like to learn today?</div>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <input 
+              id="drx-user-input" 
+              type="text" 
+              placeholder="Ask me anything..." 
+              style="flex: 1; padding: 0.75rem; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;"
+              onkeypress="if(event.key==='Enter') sendToDrX()"
+            />
+            <button 
+              onclick="sendToDrX()" 
+              style="padding: 0.75rem 1.5rem; background: #333; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;"
+            >
+              Send
+            </button>
+          </div>
+        </div>
 
-    # --- Tutorial Section ---
+        <script>
+        async function sendToDrX() {
+          const input = document.getElementById('drx-user-input');
+          const message = input.value.trim();
+          if (!message) return;
+          const chatBox = document.getElementById('drx-chat-box');
+          chatBox.innerHTML += `<div style="color: #007bff; font-weight: bold; margin-bottom: 0.5rem;">You: ${message}</div>`;
+          input.value = "";
+          chatBox.innerHTML += `<div id="thinking" style="color: #666; font-style: italic; margin-bottom: 0.5rem;">Dr. X is thinking...</div>`;
+          chatBox.scrollTop = chatBox.scrollHeight;
+          try {
+            const response = await fetch('https://ask-drx-730124987572.us-central1.run.app', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message }),
+            });
+            const data = await response.json();
+            document.getElementById('thinking').remove();
+            chatBox.innerHTML += `<div style="color: #333; font-weight: bold; margin-bottom: 0.5rem;">Dr. X: ${data.reply}</div>`;
+          } catch (error) {
+            document.getElementById('thinking').remove();
+            chatBox.innerHTML += `<div style="color: #333; font-weight: bold; margin-bottom: 0.5rem;">Dr. X: Sorry, I'm having trouble connecting right now. Please try again.</div>`;
+          }
+          chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        </script>
+    ''', height=500)
+
+    # --- Tutorial ---
     st.markdown("---")
     st.header("📘 What is a Function?")
-    
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.write("A **function** is a rule that gives exactly one output for each input.")
-        st.latex(r"f(x) = x + 3")
-        st.write("If x = 2, then f(x) = 5")
-        
-        st.markdown("**Think of it like:**")
-        st.write("🍎 **Input Machine**: You put in a number")
-        st.write("⚙️ **Processing**: The function applies its rule")  
-        st.write("📤 **Output**: You get exactly one result")
-    
-    with col2:
-        st.markdown("**Key Terms:**")
-        st.write("• **Input (x)**: what goes in")
-        st.write("• **Output (f(x))**: what comes out")
-        st.write("• **Rule**: how the output is calculated")
+    st.write("A **function** is a rule that gives one output for each input. For example:")
+    st.latex(r"f(x) = x + 3")
+    st.write("If x = 2, then f(x) = 5")
 
-    # --- Interactive Function Playground ---
+    st.markdown("**Key Terms:**")
+    st.write("- **Input (x)**: what goes in")
+    st.write("- **Output (f(x))**: what comes out")
+    st.write("- **Rule**: how the output is calculated")
+
+    # --- Toggle Functions ---
     st.markdown("---")
     st.header("🔄 Function Playground")
-    
-    col1, col2 = st.columns([1, 2])
-    
-    with col1:
-        st.write("Choose a function type and input value to see the output.")
-        
-        func_type = st.selectbox(
-            "Function type:", 
-            [
-                "Linear: f(x)=2x+1", 
-                "Quadratic: f(x)=x²", 
-                "Exponential: f(x)=3^x", 
-                "Decay: f(x)=100(0.9)^x"
-            ]
-        )
-        
-        x_val = st.slider("Choose an input x:", 0, 10, 2)
-        
-        fx = calculate_function(func_type, x_val)
-        st.success(f"f({x_val}) = {fx:.2f}")
-        
-        # Show the calculation steps
-        if func_type.startswith("Linear"):
-            st.write(f"**Calculation:** f({x_val}) = 2({x_val}) + 1 = {fx}")
-        elif func_type.startswith("Quadratic"):
-            st.write(f"**Calculation:** f({x_val}) = {x_val}² = {fx}")
-        elif func_type.startswith("Exponential"):
-            st.write(f"**Calculation:** f({x_val}) = 3^{x_val} = {fx}")
-        elif func_type.startswith("Decay"):
-            st.write(f"**Calculation:** f({x_val}) = 100 × (0.9)^{x_val} = {fx:.2f}")
-    
-    with col2:
-        # Display matplotlib chart
-        try:
-            fig = create_function_chart(func_type, x_val)
-            st.pyplot(fig)
-        except Exception as e:
-            st.write("📊 Chart would display here")
-            st.write(f"Current point: ({x_val}, {fx:.2f})")
+    st.write("Choose a function type and input value to see the output.")
+
+    func_type = st.selectbox("Function type:", ["Linear: f(x)=2x+1", "Quadratic: f(x)=x²", "Exponential: f(x)=3^x", "Decay: f(x)=100(0.9)^x"])
+    x_val = st.slider("Choose an input x:", 0, 10, 2)
+
+    if func_type.startswith("Linear"):
+        fx = 2 * x_val + 1
+    elif func_type.startswith("Quadratic"):
+        fx = x_val ** 2
+    elif func_type.startswith("Exponential"):
+        fx = 3 ** x_val
+    elif func_type.startswith("Decay"):
+        fx = 100 * (0.9 ** x_val)
+
+    st.success(f"f({x_val}) = {fx:.2f}")
 
     # --- Exponential Decay Focus ---
     st.markdown("---")
     st.header("📉 Dive Deeper: Exponential Decay")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.latex(r"f(x) = 100 \cdot (0.9)^x")
-        st.write("• **100** = Starting value")
-        st.write("• **0.9** = Decay factor (10% decrease each step)")
-        st.write("• **x** = Time steps")
-        st.write("**What happens as x increases?** The value gets smaller and smaller!")
-        
-        st.markdown("### 🤔 Think About It:")
-        st.write("- After 1 step: 90% remains (10% lost)")
-        st.write("- After 2 steps: 81% remains (19% lost total)")
-        st.write("- After 3 steps: 72.9% remains (27.1% lost total)")
-    
-    with col2:
-        # Show decay table
-        st.write("**Decay Table:**")
-        decay_data = []
-        for i in range(11):
-            value = 100 * (0.9 ** i)
-            percent_remaining = value
-            decay_data.append({
-                "Time (x)": i, 
-                "Value f(x)": f"{value:.1f}",
-                "% Remaining": f"{percent_remaining:.1f}%"
-            })
-        
-        df = pd.DataFrame(decay_data)
-        st.dataframe(df, height=300)
+    st.latex(r"f(x) = 100 \\cdot (0.9)^x")
 
-    # --- Real World Examples ---
-    st.markdown("### 🌍 Real World Examples of Exponential Decay:")
-    
-    examples_col1, examples_col2 = st.columns(2)
-    
-    with examples_col1:
-        st.write("**Technology & Daily Life:**")
-        st.write("📱 Phone battery losing charge")
-        st.write("🌡️ Hot coffee cooling down")
-        st.write("🚗 Car value depreciating")
-        st.write("📡 WiFi signal getting weaker with distance")
-        
-    with examples_col2:
-        st.write("**Science & Medicine:**")
-        st.write("☢️ Radioactive materials breaking down")
-        st.write("💊 Medicine leaving your body")
-        st.write("🧬 Population decline in endangered species")
-        st.write("🌊 Sound waves getting quieter")
+    st.write("- 100 = Starting value")
+    st.write("- 0.9 = Decay factor (10% decrease)")
+    st.write("- x = Time steps")
 
-    # --- Interactive Decay Example ---
-    st.markdown("---")
-    st.subheader("🔋 Interactive Example: Phone Battery")
-    
-    battery_col1, battery_col2 = st.columns(2)
-    
-    with battery_col1:
-        hours = st.slider("Hours since full charge:", 0, 24, 8)
-        battery_percent = 100 * (0.92 ** hours)  # 8% loss per hour
-        
-        st.write(f"**After {hours} hours:**")
-        st.write(f"Battery: {battery_percent:.1f}%")
-        
-        # Visual battery indicator
-        if battery_percent > 75:
-            st.success(f"🔋🔋🔋🔋 {battery_percent:.1f}%")
-        elif battery_percent > 50:
-            st.warning(f"🔋🔋🔋 {battery_percent:.1f}%")
-        elif battery_percent > 25:
-            st.warning(f"🔋🔋 {battery_percent:.1f}%")
-        else:
-            st.error(f"🔋 {battery_percent:.1f}%")
-    
-    with battery_col2:
-        st.write("**Battery Decay Function:**")
-        st.latex(r"f(x) = 100 \cdot (0.92)^x")
-        st.write("Where x = hours since full charge")
-        st.write("**Decay rate:** 8% per hour")
-        st.write("**Decay factor:** 0.92 (92% remains each hour)")
+    st.write("**What happens as x increases?** Try different values above to observe the shrinking.")
 
-    # --- Reflection Section ---
+    # --- Reflection Prompt ---
     st.markdown("---")
     st.header("🎓 Reflection with Dr. X")
-    
-    st.write("**Reflection Questions:**")
-    st.write("1. How does exponential decay differ from linear change?")
-    st.write("2. What's something in real life that decays exponentially?")
-    st.write("3. Why might this be important to understand?")
-    
-    reflection = st.text_area("Write your thoughts here:", height=100)
+    st.write("Use the Ask Dr. X chat box above to share your thoughts on decay vs. linear change. What's something in real life that decays?")
 
-    if st.button("Get Dr. X Feedback on Reflection") and reflection:
-        with st.spinner("Dr. X is reviewing your reflection..."):
-            try:
-                if 'OPENAI_API_KEY' in st.secrets:
-                    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-                    response = client.chat.completions.create(
-                        model="gpt-3.5-turbo",
-                        messages=[
-                            {
-                                "role": "system", 
-                                "content": "You're Dr. X, providing encouraging feedback on student reflections about exponential decay functions. Give constructive, positive feedback that builds understanding."
-                            },
-                            {
-                                "role": "user", 
-                                "content": f"Student reflection on exponential decay: {reflection}"
-                            }
-                        ],
-                        max_tokens=250
-                    )
-                    st.markdown("### 🧠 Dr. X's Feedback:")
-                    st.success(response.choices[0].message.content)
-                else:
-                    st.markdown("### 🧠 Dr. X's Feedback:")
-                    st.success("Great thinking! Exponential decay is different from linear change because the rate of decrease gets smaller over time, but the percentage decrease stays constant. This is super important in real life - from understanding how medications work in your body to managing phone battery life!")
-            except Exception as e:
-                st.error(f"Dr. X feedback error: {str(e)}")
-
-    # --- Quiz Section ---
-    st.markdown("---")
-    st.header("🧮 Quick Quiz")
-    
-    quiz_question = st.radio(
-        "If f(x) = 50(0.8)^x represents the amount of medicine in your body, what happens every hour?",
-        [
-            "The amount increases by 20%",
-            "The amount decreases by 20%", 
-            "The amount stays the same",
-            "The amount doubles"
-        ]
-    )
-    
-    if st.button("Check Answer"):
-        if "decreases by 20%" in quiz_question:
-            st.success("🎉 Correct! The decay factor 0.8 means 80% remains, so 20% is lost each hour.")
-            st.balloons()
-        else:
-            st.error("❌ Not quite. Remember: 0.8 means 80% remains, so 20% is lost each hour!")
-            
-    # Bonus quiz
-    st.markdown("**Bonus Question:**")
-    bonus_answer = st.number_input("After 3 hours, how much medicine remains? (Start with 50mg)", min_value=0.0, step=0.1)
-    
-    if st.button("Check Bonus Answer"):
-        correct_answer = 50 * (0.8 ** 3)  # 25.6mg
-        if abs(bonus_answer - correct_answer) < 0.5:
-            st.success(f"🎉 Excellent! The correct answer is {correct_answer:.1f}mg")
-            st.balloons()
-        else:
-            st.error(f"Close, but the correct answer is {correct_answer:.1f}mg. Try: 50 × (0.8)³")
-
-# --- Footer ---
+# --- Footer Attribution ---
 st.markdown("---")
-st.markdown(
-    "### 🧠 MathCraft Lesson: *Panther.Functions* — developed by Xavier Honablue, M.Ed",
-    help="An interactive learning experience for understanding mathematical functions"
-)
-
-# Add some spacing
-st.markdown("<br><br>", unsafe_allow_html=True)
+st.markdown("### 🧠 MathCraft Lesson: *Panther.Functions* — developed by Xavier Honablue, M.Ed")
