@@ -4,6 +4,13 @@ from openai import OpenAI
 # --- Page Config ---
 st.set_page_config(page_title="Panther Functions: Exponential Decay", page_icon="📉")
 
+# --- Define State Flags ---
+def mark_ask_drx():
+    st.session_state.ask_drx = True
+
+def mark_get_drx_reflection():
+    st.session_state.get_drx_reflection = True
+
 # --- Title ---
 st.title("🐾 Panthers Learn Functions")
 st.markdown("Welcome, Englewood STEM Panthers! Enter your name and choose an avatar to begin.")
@@ -19,7 +26,11 @@ if name:
     st.markdown("## 🧠 Ask Dr. X: What is your interpretation of a function?")
     st.write("Dr. X wants to hear how YOU understand the concept of a function.")
 
-    user_thought = st.text_area("What do YOU think a function is?", on_change=lambda: st.session_state.ask_drx := True, key="function_input")
+    user_thought = st.text_area(
+        "What do YOU think a function is?",
+        on_change=mark_ask_drx,
+        key="function_input"
+    )
 
     if st.session_state.get("ask_drx") and user_thought:
         with st.spinner("Dr. X is thinking..."):
@@ -82,7 +93,11 @@ if name:
     # --- Reflection Prompt ---
     st.markdown("---")
     st.header("🎓 Reflection with Dr. X")
-    reflection = st.text_area("How does decay differ from linear change? What's something in real life that decays?", on_change=lambda: st.session_state.get_drx_reflection := True, key="reflection_input")
+    reflection = st.text_area(
+        "How does decay differ from linear change? What's something in real life that decays?",
+        on_change=mark_get_drx_reflection,
+        key="reflection_input"
+    )
 
     if st.session_state.get("get_drx_reflection") and reflection:
         with st.spinner("Dr. X is thinking..."):
