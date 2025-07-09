@@ -1,5 +1,5 @@
 import streamlit as st
-from openai import OpenAI
+import openai  # Make sure 'openai' is installed via requirements.txt
 
 # --- Page Config ---
 st.set_page_config(page_title="Panther Functions: Exponential Decay", page_icon="📉")
@@ -26,9 +26,8 @@ if name:
     st.markdown("## 🧠 Ask Dr. X: What is your interpretation of a function?")
     st.write("Dr. X wants to hear how YOU understand the concept of a function.")
 
-    # --- Embed External HTML Chat Widget ---
+    # --- Embedded HTML Chat Box ---
     st.components.v1.html('''
-        <!-- Ask Dr. X Widget - Embedded -->
         <div id="ask-drx-widget" style="max-width: 600px; margin: 2rem auto; padding: 1.5rem; background: white; border: 2px solid #ddd; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-family: Arial, sans-serif;">
           <h3 style="text-align: center; color: #333; margin-bottom: 1rem; font-size: 1.5rem;">
             Ask Dr. X <span style="font-size: 2.2rem;">👓</span>
@@ -46,8 +45,7 @@ if name:
             />
             <button 
               onclick="sendToDrX()" 
-              style="padding: 0.75rem 1.5rem; background: #333; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;"
-            >
+              style="padding: 0.75rem 1.5rem; background: #333; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem;">
               Send
             </button>
           </div>
@@ -93,7 +91,7 @@ if name:
     st.write("- **Output (f(x))**: what comes out")
     st.write("- **Rule**: how the output is calculated")
 
-    # --- Toggle Functions ---
+    # --- Interactive Playground ---
     st.markdown("---")
     st.header("🔄 Function Playground")
     st.write("Choose a function type and input value to see the output.")
@@ -112,10 +110,10 @@ if name:
 
     st.success(f"f({x_val}) = {fx:.2f}")
 
-    # --- Exponential Decay Focus ---
+    # --- Decay Focus ---
     st.markdown("---")
     st.header("📉 Dive Deeper: Exponential Decay")
-    st.latex(r"f(x) = 100 \\cdot (0.9)^x")
+    st.latex(r"f(x) = 100 \cdot (0.9)^x")
 
     st.write("- 100 = Starting value")
     st.write("- 0.9 = Decay factor (10% decrease)")
@@ -123,11 +121,11 @@ if name:
 
     st.write("**What happens as x increases?** Try different values above to observe the shrinking.")
 
-    # --- Reflection Prompt ---
+    # --- Reflection ---
     st.markdown("---")
     st.header("🎓 Reflection with Dr. X")
     st.write("Use the Ask Dr. X chat box above to share your thoughts on decay vs. linear change. What's something in real life that decays?")
 
-# --- Footer Attribution ---
+# --- Footer ---
 st.markdown("---")
 st.markdown("### 🧠 MathCraft Lesson: *Panther.Functions* — developed by Xavier Honablue, M.Ed")
